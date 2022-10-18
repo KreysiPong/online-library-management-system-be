@@ -7,7 +7,7 @@ var jwt = require("jsonwebtoken");
 var SECRET = "naktotesaded";
 
 router.get("/", async function (req, res, next) {
-  const data = await Users.find({});
+  const data = await Users.find({ type: "STUDENT" });
   res.send({ data });
 });
 

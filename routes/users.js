@@ -1,33 +1,64 @@
 var express = require("express");
 var router = express.Router();
-var mongoose = require("mongoose");
+var Users = require("../schemas/user.schema");
 var bcrypt = require("bcrypt");
 var salt = bcrypt.genSaltSync(10);
 
-const schema = new mongoose.Schema({
-  first_name: "string",
-  last_name: "string",
-  year: "number",
-  course: "string",
-  id_number: "string",
-  username: "string",
-  password: "string",
-  email: "string",
-});
-const Users = mongoose.model("Users", schema);
-
-// routes
-// defime routes for every action
 router.get("/", async function (req, res, next) {
   const data = await Users.find({});
-  res.send(data);
+  res.send({ data });
 });
 
-router.post("/create", function (req, res) {
+router.post("/signup", async function (req, res) {
+  if (!req.body.first_name) {
+    return res.send({ message: "First Name is required" });
+  }
+
+  if (!req.body.student_id) {
+    return res.send({ message: "Student ID is required" });
+  }
+
+  const idExists = await Users.findOne({ student_id: req.body.student_id });
+
+  if (idExists?.student_id === req.body.student_id) {
+    return res.send({ message: "Student ID already exists" });
+  }
+
+  if (!req.body.last_name) {
+    return res.send({ message: "Last Name is required" });
+  }
+
+  if (!req.body.username) {
+    return res.send({ message: "Username is required" });
+  }
+
+  const usernameExists = await Users.findOne({ username: req.body.username });
+
+  if (usernameExists?.username === req.body.username) {
+    return res.send({ message: "Username already exists" });
+  }
+
+  if (!req.body.password) {
+    return res.send({ message: "Password is required" });
+  }
+
+  if (!req.body.course) {
+    return res.send({ message: "Course is required" });
+  }
+
+  if (!req.body.year) {
+    return res.send({ message: "Year is required" });
+  }
+
+  if (!req.body.email) {
+    return res.send({ message: "Email is required" });
+  }
+
   Users.create(
     {
       ...req.body,
       password: bcrypt.hashSync(req.body.password, salt),
+      type: "STUDENT",
     },
     function (err) {
       if (err) {
@@ -40,13 +71,12 @@ router.post("/create", function (req, res) {
 });
 
 router.post("/login", async function (req, res) {
-  console.log(req.body);
   if (!req.body.username) {
-    res.send({ message: "Username is required", status: "error" });
+    res.send({ message: "Username is required" });
   }
 
   if (!req.body.password) {
-    res.send({ message: "Password is required", status: "error" });
+    res.send({ message: "Password is required" });
   }
 
   const data = await Users.findOne({ email: req.body.email });
@@ -56,7 +86,7 @@ router.post("/login", async function (req, res) {
   if (correctPassword) {
     res.send({ data, status: "success" });
   } else {
-    res.send({ message: "Password is incorrect", status: "error" });
+    res.send({ message: "Password is incorrect" });
   }
 });
 

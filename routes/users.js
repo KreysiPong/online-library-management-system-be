@@ -3,6 +3,8 @@ var router = express.Router();
 var Users = require("../schemas/user.schema");
 var bcrypt = require("bcrypt");
 var salt = bcrypt.genSaltSync(10);
+var jwt = require("jsonwebtoken");
+var SECRET = "naktotesaded";
 
 router.get("/", async function (req, res, next) {
   const data = await Users.find({});
@@ -71,8 +73,8 @@ router.post("/signup", async function (req, res) {
 });
 
 router.post("/login", async function (req, res) {
-  if (!req.body.username) {
-    res.send({ message: "Username is required" });
+  if (!req.body.email) {
+    res.send({ message: "Email is required" });
   }
 
   if (!req.body.password) {
@@ -81,13 +83,21 @@ router.post("/login", async function (req, res) {
 
   const data = await Users.findOne({ email: req.body.email });
 
-  const correctPassword = bcrypt.compareSync(req.body.password, data.password);
+  const correctPassword = bcrypt.compareSync(req.body.password, data?.password);
 
   if (correctPassword) {
-    res.send({ data, status: "success" });
-  } else {
-    res.send({ message: "Password is incorrect" });
+    const user = data.toObject();
+    delete user.password;
+
+    return res.send({
+      accessToken: jwt.sign({ ...user }, SECRET, {
+        expiresIn: "365d", // expires in 365 days
+      }),
+      message: "Login Successful",
+    });
   }
+
+  return res.send({ message: "Password is incorrect" });
 });
 
 router.delete("/:id", async (req, res) => {

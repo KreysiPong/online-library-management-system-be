@@ -1,6 +1,8 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-var mongoose = require('mongoose');
+var mongoose = require("mongoose");
+var bcrypt = require("bcrypt");
+var salt = bcrypt.genSaltSync(10);
 
 const schema = new mongoose.Schema({
   first_name: "string",
@@ -10,30 +12,57 @@ const schema = new mongoose.Schema({
   id_number: "string",
   username: "string",
   password: "string",
-  email: "string"
+  email: "string",
 });
-const Users = mongoose.model('Users', schema);
+const Users = mongoose.model("Users", schema);
 
-router.get('/', async function (req, res, next) {
+// routes
+// defime routes for every action
+router.get("/", async function (req, res, next) {
   const data = await Users.find({});
   res.send(data);
 });
 
-router.post('/', function (req, res) {
-  Users.create(req.body, function (err, small) {
-    if (err) {
-      console.log(err);
-
-      res.send({ message: 'Error Creating a book' });
-    } else {
-      res.send({ message: 'Successfully Created Book' });
+router.post("/create", function (req, res) {
+  Users.create(
+    {
+      ...req.body,
+      password: bcrypt.hashSync(req.body.password, salt),
+    },
+    function (err) {
+      if (err) {
+        res.send({ message: "Error Creating a user" });
+      } else {
+        res.send({ message: "Successfully Created user" });
+      }
     }
-  });
-})
+  );
+});
 
-router.delete('/:id', async (req, res) => {
+router.post("/login", async function (req, res) {
+  console.log(req.body);
+  if (!req.body.username) {
+    res.send({ message: "Username is required", status: "error" });
+  }
+
+  if (!req.body.password) {
+    res.send({ message: "Password is required", status: "error" });
+  }
+
+  const data = await Users.findOne({ email: req.body.email });
+
+  const correctPassword = bcrypt.compareSync(req.body.password, data.password);
+
+  if (correctPassword) {
+    res.send({ data, status: "success" });
+  } else {
+    res.send({ message: "Password is incorrect", status: "error" });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
   const data = await Users.deleteOne({ _id: req.params.id });
   res.send(data);
-})
+});
 
 module.exports = router;

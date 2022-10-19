@@ -79,6 +79,7 @@ router.post("/book", async function (req, res) {
                   })
                     .then((response) => {
                       return res.send({
+                        status: true,
                         message: "Successfully borrowed book",
                       });
                     })

@@ -2,8 +2,6 @@ var mongoose = require("mongoose");
 
 const schema = new mongoose.Schema(
   {
-    number: "string", // 0001;
-    date_received: "date",
     class: "string",
     author: "string",
     title: "string",

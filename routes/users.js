@@ -26,6 +26,16 @@ router.post("/signup", async function (req, res) {
     return res.send({ message: "Student ID already exists" });
   }
 
+  if (!req.body.email) {
+    return res.send({ message: "Email is required" });
+  }
+
+  const emailExists = await Users.findOne({ email: req.body.email });
+
+  if (emailExists?.email === req.body.email) {
+    return res.send({ message: "Email already exists" });
+  }
+
   if (!req.body.last_name) {
     return res.send({ message: "Last Name is required" });
   }
@@ -50,10 +60,6 @@ router.post("/signup", async function (req, res) {
 
   if (!req.body.year) {
     return res.send({ message: "Year is required" });
-  }
-
-  if (!req.body.email) {
-    return res.send({ message: "Email is required" });
   }
 
   Users.create(

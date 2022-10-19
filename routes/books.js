@@ -7,14 +7,18 @@ router.get("/", async function (req, res, next) {
   res.send(data);
 });
 
-router.post("/", function (req, res) {
-  Book.create(req.body, function (err) {
+router.post("/create", function (req, res) {
+  Book.create(req.body, function (err, response) {
     if (err) {
       console.log(err);
 
       res.send({ message: "Error Creating a book" });
     } else {
-      res.send({ message: "Successfully Created Book" });
+      res.send({
+        message: "Successfully Created Book",
+        data: response,
+        status: true,
+      });
     }
   });
 });

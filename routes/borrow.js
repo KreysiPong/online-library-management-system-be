@@ -4,7 +4,7 @@ var Borrowers = require("../schemas/borrow.schema");
 var Books = require("../schemas/book.schema");
 
 router.get("/", async function (req, res, next) {
-  const data = await Borrowers.find({})
+  const data = await Borrowers.find({ returned: false })
     .populate({ path: "borrower", select: "username" })
     .populate({ path: "book", select: "title" });
 
@@ -13,7 +13,6 @@ router.get("/", async function (req, res, next) {
 
 router.post("/book", async function (req, res) {
   try {
-    console.log(req.body);
     if (!req.body.userId) {
       return res.send({ message: "User ID is required" });
     }
@@ -47,6 +46,7 @@ router.post("/book", async function (req, res) {
             Borrowers.findOne({
               borrower: userId,
               book: bookId,
+              returned: false,
             })
               .lean()
               .exec(function (err, doc) {
@@ -66,6 +66,7 @@ router.post("/book", async function (req, res) {
                         });
                       } else {
                         return res.send({
+                          status: true,
                           message: "Successfully borrowed book",
                         });
                       }
@@ -76,8 +77,9 @@ router.post("/book", async function (req, res) {
                     borrower: req.body.userId,
                     book: req.body.bookId,
                     quantity: 1,
+                    returned: false,
                   })
-                    .then((response) => {
+                    .then(() => {
                       return res.send({
                         status: true,
                         message: "Successfully borrowed book",
@@ -98,6 +100,38 @@ router.post("/book", async function (req, res) {
   } catch (ex) {
     return res.send({ message: "Something went wrong" });
   }
+});
+
+router.post("/return/:id", async function (req, res) {
+  Borrowers.findOne({ _id: req.params.id }).then((borrower) => {
+    const borrowedQuantity = borrower.quantity;
+    const bookId = borrower.book;
+    Books.findOne({ _id: bookId }).then((book) => {
+      const totalQuantity = book.quantity + borrowedQuantity;
+      Books.updateOne(
+        { _id: bookId },
+        { quantity: totalQuantity },
+        function (err, resp) {
+          if (err) {
+            return res.send({
+              message: "Error on returning book. Please try again later.",
+            });
+          }
+          if (resp.acknowledged) {
+            Borrowers.updateOne(
+              { _id: req.params.id },
+              { returned: true }
+            ).then(() => {
+              return res.send({
+                message: "Successfully deleted book",
+                status: true,
+              });
+            });
+          }
+        }
+      );
+    });
+  });
 });
 
 module.exports = router;

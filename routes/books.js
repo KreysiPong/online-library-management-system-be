@@ -2,8 +2,25 @@ var express = require("express");
 var router = express.Router();
 var Book = require("../schemas/book.schema");
 
+var dateFilter = new Date(2017, 31, 12); // Year, Day, Month
+
 router.get("/", async function (req, res, next) {
-  const data = await Book.find({});
+  // https://stackoverflow.com/questions/11973304/mongodb-mongoose-querying-at-a-specific-date
+  const data = await Book.find({
+    createdAt: {
+      $gte: dateFilter,
+    },
+  });
+  res.send(data);
+});
+
+router.get("/archive", async function (req, res, next) {
+  // https://stackoverflow.com/questions/11973304/mongodb-mongoose-querying-at-a-specific-date
+  const data = await Book.find({
+    createdAt: {
+      $lt: dateFilter,
+    },
+  });
   res.send(data);
 });
 

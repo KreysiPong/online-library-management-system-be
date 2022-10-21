@@ -11,6 +11,16 @@ router.get("/", async function (req, res, next) {
   return res.send(data);
 });
 
+router.get("/audit-log", async function (req, res, next) {
+  const data = await Borrowers.find()
+    .populate({ path: "borrower", select: "username" })
+    .populate({ path: "book", select: "title" });
+
+  const withoutNull = data.filter((item) => item.book);
+
+  return res.send(withoutNull);
+});
+
 router.post("/book", async function (req, res) {
   try {
     if (!req.body.userId) {

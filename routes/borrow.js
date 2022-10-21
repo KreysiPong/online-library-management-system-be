@@ -8,7 +8,9 @@ router.get("/", async function (req, res, next) {
     .populate({ path: "borrower", select: "username" })
     .populate({ path: "book", select: "title" });
 
-  return res.send(data);
+  const notNull = data.filter((q) => q.book);
+
+  return res.send(notNull);
 });
 
 router.get("/audit-log", async function (req, res, next) {

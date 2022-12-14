@@ -4,7 +4,7 @@ var Users = require("../schemas/user.schema");
 var bcrypt = require("bcrypt");
 var salt = bcrypt.genSaltSync(10);
 var jwt = require("jsonwebtoken");
-var SECRET = "naktotesaded";
+var SECRET = "eumatthew";
 
 router.get("/", async function (req, res, next) {
   const data = await Users.find({ type: "STUDENT" });

@@ -5,12 +5,18 @@ var Book = require("../schemas/book.schema");
 var dateFilter = new Date(2017, 31, 12); // Year, Day, Month
 
 router.get("/", async function (req, res, next) {
+  // var perPage = body.limit;
+  const perPage = 20;
+  const page = req.query.page ?? 1;
+
   // https://stackoverflow.com/questions/11973304/mongodb-mongoose-querying-at-a-specific-date
   const data = await Book.find({
     createdAt: {
       $gte: dateFilter,
     },
-  });
+  })
+    .limit(perPage)
+    .skip(perPage * (page - 1));
   res.send(data);
 });
 

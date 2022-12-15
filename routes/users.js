@@ -79,31 +79,41 @@ router.post("/signup", async function (req, res) {
 });
 
 router.post("/login", async function (req, res) {
-  if (!req.body.email) {
-    res.send({ message: "Email is required" });
+  try {
+    if (!req.body.email) {
+      res.send({ message: "Email is required" });
+    }
+
+    if (!req.body.password) {
+      res.send({ message: "Password is required" });
+    }
+
+    const data = await Users.findOne({ email: req.body.email });
+
+    console.log(data);
+
+    const correctPassword = bcrypt.compareSync(
+      req.body.password,
+      data?.password
+    );
+
+    if (correctPassword) {
+      const user = data.toObject();
+      delete user.password;
+
+      return res.send({
+        accessToken: jwt.sign({ ...user }, SECRET, {
+          expiresIn: "365d", // expires in 365 days
+        }),
+        message: "Login Successful",
+      });
+    }
+
+    return res.send({ message: "Password is incorrect" });
+  } catch (ex) {
+    console.log(ex);
+    return res.send({ error: true, message: "Something went wrong" });
   }
-
-  if (!req.body.password) {
-    res.send({ message: "Password is required" });
-  }
-
-  const data = await Users.findOne({ email: req.body.email });
-
-  const correctPassword = bcrypt.compareSync(req.body.password, data?.password);
-
-  if (correctPassword) {
-    const user = data.toObject();
-    delete user.password;
-
-    return res.send({
-      accessToken: jwt.sign({ ...user }, SECRET, {
-        expiresIn: "365d", // expires in 365 days
-      }),
-      message: "Login Successful",
-    });
-  }
-
-  return res.send({ message: "Password is incorrect" });
 });
 
 router.delete("/:id", async (req, res) => {

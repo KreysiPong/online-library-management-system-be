@@ -72,7 +72,7 @@ router.post("/signup", async function (req, res) {
       if (err) {
         res.send({ message: "Error Creating a user" });
       } else {
-        res.send({ message: "Successfully Created user" });
+        res.send({ message: "Successfully Created user", data: req.body });
       }
     }
   );

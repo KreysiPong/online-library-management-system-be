@@ -26,33 +26,33 @@ router.post("/signup", async function (req, res) {
     return res.send({ message: "Student ID already exists" });
   }
 
-  if (!req.body.email) {
-    return res.send({ message: "Email is required" });
-  }
+  // if (!req.body.email) {
+  //   return res.send({ message: "Email is required" });
+  // }
 
-  const emailExists = await Users.findOne({ email: req.body.email });
+  // const emailExists = await Users.findOne({ email: req.body.email });
 
-  if (emailExists?.email === req.body.email) {
-    return res.send({ message: "Email already exists" });
-  }
+  // if (emailExists?.email === req.body.email) {
+  //   return res.send({ message: "Email already exists" });
+  // }
 
   if (!req.body.last_name) {
     return res.send({ message: "Last Name is required" });
   }
 
-  if (!req.body.username) {
-    return res.send({ message: "Username is required" });
-  }
+  // if (!req.body.username) {
+  //   return res.send({ message: "Username is required" });
+  // }
 
-  const usernameExists = await Users.findOne({ username: req.body.username });
+  // const usernameExists = await Users.findOne({ username: req.body.username });
 
-  if (usernameExists?.username === req.body.username) {
-    return res.send({ message: "Username already exists" });
-  }
+  // if (usernameExists?.username === req.body.username) {
+  //   return res.send({ message: "Username already exists" });
+  // }
 
-  if (!req.body.password) {
-    return res.send({ message: "Password is required" });
-  }
+  // if (!req.body.password) {
+  //   return res.send({ message: "Password is required" });
+  // }
 
   if (!req.body.course) {
     return res.send({ message: "Course is required" });
@@ -65,17 +65,82 @@ router.post("/signup", async function (req, res) {
   Users.create(
     {
       ...req.body,
-      password: bcrypt.hashSync(req.body.password, salt),
       type: "STUDENT",
     },
     function (err) {
       if (err) {
+        console.log(err);
         res.send({ message: "Error Creating a user" });
       } else {
         res.send({ message: "Successfully Created user", data: req.body });
       }
     }
   );
+});
+
+router.post("/register", async function (req, res) {
+  Users.find({
+    student_id: req.body.student_id,
+    first_name: {
+      $regex: req.body.first_name.trim(),
+      $options: "i",
+    },
+    last_name: {
+      $regex: req.body.last_name.trim(),
+      $options: "i",
+    },
+    year: req.body.year,
+    course: req.body.course,
+  }).then(async (response) => {
+    if (response.length) {
+      const id = response[0]._id;
+      if (!req.body.email) {
+        return res.send({ message: "Email is required" });
+      }
+      const emailExists = await Users.findOne({ email: req.body.email });
+
+      if (emailExists?.email === req.body.email) {
+        return res.send({ message: "Email already exists" });
+      }
+
+      if (!req.body.username) {
+        return res.send({ message: "Username is required" });
+      }
+      const usernameExists = await Users.findOne({
+        username: req.body.username,
+      });
+
+      if (usernameExists?.username === req.body.username) {
+        return res.send({ message: "Username already exists" });
+      }
+      if (!req.body.password) {
+        return res.send({ message: "Password is required" });
+      }
+
+      Users.updateOne(
+        {
+          _id: id,
+        },
+        {
+          email: req.body.email,
+          username: req.body.username,
+          password: bcrypt.hashSync(req.body.password, salt),
+        },
+        (err) => {
+          if (err) {
+            res.send({ message: "Error Creating a user" });
+          } else {
+            res.send({ message: "Successfully Created user", data: req.body });
+          }
+        }
+      );
+    } else {
+      res.send({
+        message:
+          "Student does not exist on the database. Please contact administrator.",
+      });
+    }
+  });
 });
 
 router.post("/login", async function (req, res) {
